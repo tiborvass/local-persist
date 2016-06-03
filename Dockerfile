@@ -1,3 +1,4 @@
-FROM golang:1.5-onbuild
+FROM alpine
 
-# onbuild handles all teh things
+COPY bin/local-persist /usr/bin/
+CMD ["local-persist"]

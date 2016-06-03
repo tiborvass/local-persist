@@ -1,0 +1,8 @@
+FROM golang:alpine
+RUN apk add --no-cache --virtual git
+RUN mkdir -p /go/src/app
+WORKDIR /go/src/app
+COPY . /go/src/app
+RUN mkdir -p /go/src/github.com/docker && git clone https://github.com/tiborvass/go-plugins-helpers /go/src/github.com/docker/go-plugins-helpers
+RUN go get -v -d
+RUN go install -tags nosystemd app
