@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"sync"
 
@@ -32,24 +33,26 @@ const (
 )
 
 type localPersistDriver struct {
-	volumes map[string]string
-	mutex   *sync.Mutex
-	debug   bool
-	name    string
+	volumes  map[string]string
+	mutex    *sync.Mutex
+	debug    bool
+	name     string
+	basePath string
 }
 
 type saveData struct {
 	State map[string]string `json:"state"`
 }
 
-func newLocalPersistDriver() localPersistDriver {
+func newLocalPersistDriver(basePath string) localPersistDriver {
 	fmt.Printf(white("%-18s", "Starting... "))
 
 	driver := localPersistDriver{
-		volumes: map[string]string{},
-		mutex:   &sync.Mutex{},
-		debug:   true,
-		name:    "local-persist",
+		volumes:  map[string]string{},
+		mutex:    &sync.Mutex{},
+		debug:    true,
+		name:     "local-persist",
+		basePath: basePath,
 	}
 
 	os.Mkdir(stateDir, 0700)
@@ -94,11 +97,7 @@ func (driver localPersistDriver) List(req volume.Request) volume.Response {
 func (driver localPersistDriver) Create(req volume.Request) volume.Response {
 	fmt.Print(white("%-18s", "Create Called... "))
 
-	mountpoint := req.Options["mountpoint"]
-	if mountpoint == "" {
-		fmt.Printf("No %s option provided\n", blue("mountpoint"))
-		return volume.Response{Err: fmt.Sprintf("The `mountpoint` option is required")}
-	}
+	mountpoint := filepath.Join(driver.basePath, req.Name)
 
 	driver.mutex.Lock()
 	defer driver.mutex.Unlock()
